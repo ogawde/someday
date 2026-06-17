@@ -26,7 +26,10 @@ export function SiteNav() {
   return (
     <header className="border-b border-border/60 bg-background/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
-        <Link href="/" className="font-heading text-xl tracking-tight">
+        <Link
+          href="/"
+          className="font-heading text-xl tracking-tight transition-all duration-200 hover:-translate-y-px hover:text-foreground/85"
+        >
           Someday
         </Link>
 
@@ -36,8 +39,8 @@ export function SiteNav() {
               key={wing.slug}
               href={`/wings/${wing.slug}`}
               className={cn(
-                "rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground",
-                pathname === `/wings/${wing.slug}` && "text-foreground"
+                "rounded-md px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:-translate-y-px hover:bg-muted/60 hover:text-foreground",
+                pathname === `/wings/${wing.slug}` && "bg-muted/50 text-foreground"
               )}
             >
               {wing.label}

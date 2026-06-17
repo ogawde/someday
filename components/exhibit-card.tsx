@@ -17,7 +17,7 @@ export function ExhibitCard({ exhibit }: { exhibit: ExhibitListItem }) {
 
   return (
     <Link href={`/exhibit/${exhibit.id}`} className="group block h-full">
-      <Card className="h-full border-border/70 transition-shadow group-hover:shadow-md">
+      <Card className="h-full border-border/70">
         {image && (
           <div className="relative aspect-[16/9] overflow-hidden rounded-t-xl">
             <ExhibitImage
