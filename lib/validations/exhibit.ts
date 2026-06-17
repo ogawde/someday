@@ -1,5 +1,11 @@
 import { z } from "zod";
 import { WING_DB_VALUES } from "@/lib/constants";
+import { isBlobImageUrl } from "@/lib/blob";
+
+const blobImageUrl = z
+  .string()
+  .url()
+  .refine(isBlobImageUrl, "Image must be uploaded through the app");
 
 export const exhibitDraftSchema = z.object({
   title: z.string().min(1).max(200),
@@ -25,7 +31,7 @@ export const generateExhibitInputSchema = z.object({
 
 export const publishExhibitSchema = exhibitDraftSchema.extend({
   links: z.array(z.string().url()).max(5).optional(),
-  imageUrls: z.array(z.string().url()).max(5).optional(),
+  imageUrls: z.array(blobImageUrl).max(5).optional(),
 });
 
 export const reportSchema = z.object({

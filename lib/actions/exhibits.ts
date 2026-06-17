@@ -8,6 +8,42 @@ import { exhibitMedia, exhibits } from "@/lib/db/schema";
 import { publishExhibitSchema } from "@/lib/validations/exhibit";
 import { getSession } from "@/lib/session";
 
+function buildMediaItems(
+  exhibitId: string,
+  imageUrls: string[] = [],
+  links: string[] = []
+) {
+  return [
+    ...imageUrls.map((url, i) => ({
+      id: nanoid(),
+      exhibitId,
+      type: "image" as const,
+      url,
+      sortOrder: i,
+    })),
+    ...links.map((url, i) => ({
+      id: nanoid(),
+      exhibitId,
+      type: "link" as const,
+      url,
+      sortOrder: imageUrls.length + i,
+    })),
+  ];
+}
+
+async function replaceExhibitMedia(
+  exhibitId: string,
+  imageUrls: string[] = [],
+  links: string[] = []
+) {
+  await db.delete(exhibitMedia).where(eq(exhibitMedia.exhibitId, exhibitId));
+
+  const mediaItems = buildMediaItems(exhibitId, imageUrls, links);
+  if (mediaItems.length > 0) {
+    await db.insert(exhibitMedia).values(mediaItems);
+  }
+}
+
 export async function publishExhibitAction(input: unknown) {
   const session = await getSession();
   if (!session) {
@@ -34,26 +70,11 @@ export async function publishExhibitAction(input: unknown) {
     status: "published",
   });
 
-  const mediaItems = [
-    ...(data.imageUrls ?? []).map((url, i) => ({
-      id: nanoid(),
-      exhibitId,
-      type: "image" as const,
-      url,
-      sortOrder: i,
-    })),
-    ...(data.links ?? []).map((url, i) => ({
-      id: nanoid(),
-      exhibitId,
-      type: "link" as const,
-      url,
-      sortOrder: (data.imageUrls?.length ?? 0) + i,
-    })),
-  ];
-
-  if (mediaItems.length > 0) {
-    await db.insert(exhibitMedia).values(mediaItems);
-  }
+  await replaceExhibitMedia(
+    exhibitId,
+    data.imageUrls ?? [],
+    data.links ?? []
+  );
 
   revalidatePath("/");
   revalidatePath(
@@ -98,7 +119,14 @@ export async function updateExhibitAction(exhibitId: string, input: unknown) {
     })
     .where(eq(exhibits.id, exhibitId));
 
+  await replaceExhibitMedia(
+    exhibitId,
+    data.imageUrls ?? [],
+    data.links ?? []
+  );
+
   revalidatePath(`/exhibit/${exhibitId}`);
+  revalidatePath("/");
   return { success: true };
 }
 

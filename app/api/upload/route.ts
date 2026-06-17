@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { put } from "@vercel/blob";
+import { isBlobConfigured, uploadExhibitImage } from "@/lib/blob";
 import { getSession } from "@/lib/session";
+
+export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const session = await getSession();
@@ -8,9 +10,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+  if (!isBlobConfigured()) {
     return NextResponse.json(
-      { error: "File uploads are not configured" },
+      { error: "Image uploads are not configured" },
       { status: 503 }
     );
   }
@@ -30,9 +32,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "File must be under 5MB" }, { status: 400 });
   }
 
-  const blob = await put(`exhibits/${session.user.id}/${Date.now()}-${file.name}`, file, {
-    access: "public",
-  });
-
-  return NextResponse.json({ url: blob.url });
+  try {
+    const blob = await uploadExhibitImage(session.user.id, file);
+    return NextResponse.json({ url: blob.url });
+  } catch {
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+  }
 }

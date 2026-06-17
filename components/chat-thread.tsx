@@ -53,15 +53,25 @@ export function ChatThread({
     }
   }, [conversationId]);
 
+  const markRead = useCallback(async () => {
+    await fetch("/api/messages/read", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ conversationId }),
+    });
+  }, [conversationId]);
+
   useEffect(() => {
     void fetchMessages();
+    void markRead();
     const interval = setInterval(() => {
       if (document.visibilityState === "visible") {
         void fetchMessages();
+        void markRead();
       }
     }, 3000);
     return () => clearInterval(interval);
-  }, [fetchMessages]);
+  }, [fetchMessages, markRead]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

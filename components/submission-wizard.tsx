@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { WINGS, wingSlugToDb, type WingDbValue } from "@/lib/constants";
 import { publishExhibitAction } from "@/lib/actions/exhibits";
+import { ExhibitImageUpload } from "@/components/exhibit-image-upload";
+import { ExhibitLinksInput } from "@/components/exhibit-links-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -40,7 +42,6 @@ export function SubmissionWizard() {
   const [openToCollaboration, setOpenToCollaboration] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
 
   const wingDb = wingSlugToDb(wingSlug) ?? "products";
 
@@ -80,26 +81,6 @@ export function SubmissionWizard() {
       setStep(4);
     } finally {
       setIsGenerating(false);
-    }
-  }
-
-  async function handleImageUpload(file: File) {
-    setIsUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.error ?? "Upload failed");
-        return;
-      }
-      setImageUrls((prev) => [...prev, data.url]);
-      toast.success("Image uploaded");
-    } catch {
-      toast.error("Upload failed");
-    } finally {
-      setIsUploading(false);
     }
   }
 
@@ -183,50 +164,9 @@ export function SubmissionWizard() {
               </p>
             </div>
 
-            <div>
-              <Label>Optional images</Label>
-              <Input
-                type="file"
-                accept="image/*"
-                className="mt-2"
-                disabled={isUploading}
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) void handleImageUpload(file);
-                }}
-              />
-              {imageUrls.length > 0 && (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {imageUrls.length} image(s) attached
-                </p>
-              )}
-            </div>
+            <ExhibitImageUpload imageUrls={imageUrls} onChange={setImageUrls} />
 
-            <div>
-              <Label>Optional links</Label>
-              {links.map((link, i) => (
-                <Input
-                  key={i}
-                  value={link}
-                  onChange={(e) => {
-                    const next = [...links];
-                    next[i] = e.target.value;
-                    setLinks(next);
-                  }}
-                  placeholder="https://github.com/..."
-                  className="mt-2"
-                />
-              ))}
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="mt-2"
-                onClick={() => setLinks([...links, ""])}
-              >
-                Add another link
-              </Button>
-            </div>
+            <ExhibitLinksInput links={links} onChange={setLinks} />
 
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setStep(1)}>

@@ -132,6 +132,8 @@ export const conversations = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+    creatorLastReadAt: timestamp("creator_last_read_at"),
+    requesterLastReadAt: timestamp("requester_last_read_at"),
   },
   (table) => [
     uniqueIndex("conversations_exhibit_requester_idx").on(

@@ -1,36 +1,44 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
-import { ExhibitCard } from "@/components/exhibit-card";
+import { ExhibitGridSkeleton } from "@/components/exhibit-grid-skeleton";
+import { ProfileExhibits } from "@/components/profile-exhibits";
 import { ProfileManage } from "@/components/profile-manage";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/db";
 import { exhibits } from "@/lib/db/schema";
-import { getPublishedExhibits, getUserByUsername } from "@/lib/queries/exhibits";
+import { getPublishedExhibitCount, getUserByUsername } from "@/lib/queries/exhibits";
 import { getSession } from "@/lib/session";
-
-export const dynamic = "force-dynamic";
 
 export default async function ProfilePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ username: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) {
   const { username } = await params;
+  const { page: pageParam } = await searchParams;
   const profileUser = await getUserByUsername(username);
 
   if (!profileUser) notFound();
 
   const session = await getSession();
   const isOwnProfile = session?.user.id === profileUser.id;
+  const page = Math.max(1, Number(pageParam) || 1);
 
-  const userExhibits = await getPublishedExhibits({ ownerId: profileUser.id });
-  const allOwnExhibits = isOwnProfile
-    ? await db.select().from(exhibits).where(eq(exhibits.ownerId, profileUser.id))
-    : [];
+  const [exhibitCount, allOwnExhibits] = await Promise.all([
+    getPublishedExhibitCount({ ownerId: profileUser.id }),
+    isOwnProfile
+      ? db.select().from(exhibits).where(eq(exhibits.ownerId, profileUser.id))
+      : Promise.resolve([]),
+  ]);
 
-  const hasOpenExhibits = userExhibits.some((e) => e.openToCollaboration);
+  const hasOpenExhibits = allOwnExhibits.some(
+    (exhibit) => exhibit.openToCollaboration && exhibit.status === "published"
+  );
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
@@ -65,7 +73,7 @@ export default async function ProfilePage({
 
       <section className="mt-12">
         <h2 className="font-heading text-2xl">Exhibits</h2>
-        {userExhibits.length === 0 ? (
+        {exhibitCount === 0 ? (
           <p className="mt-4 text-muted-foreground">
             No exhibits yet.{" "}
             {isOwnProfile && (
@@ -75,11 +83,13 @@ export default async function ProfilePage({
             )}
           </p>
         ) : (
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {userExhibits.map((exhibit) => (
-              <ExhibitCard key={exhibit.id} exhibit={exhibit} />
-            ))}
-          </div>
+          <Suspense key={`${username}-${page}`} fallback={<ExhibitGridSkeleton />}>
+            <ProfileExhibits
+              username={username}
+              ownerId={profileUser.id}
+              page={page}
+            />
+          </Suspense>
         )}
       </section>
     </div>

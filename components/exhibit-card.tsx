@@ -4,14 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ExhibitImage } from "@/components/exhibit-image";
 import { getWingLabel } from "@/lib/constants";
-import type { ExhibitWithOwner } from "@/lib/queries/exhibits";
+import type { ExhibitListItem } from "@/lib/queries/exhibits";
 
 function excerpt(text: string, max = 120) {
   if (text.length <= max) return text;
   return `${text.slice(0, max).trim()}…`;
 }
 
-export function ExhibitCard({ exhibit }: { exhibit: ExhibitWithOwner }) {
+export function ExhibitCard({ exhibit }: { exhibit: ExhibitListItem }) {
   const username = exhibit.owner.username ?? "anonymous";
   const image = exhibit.media.find((m) => m.type === "image");
 

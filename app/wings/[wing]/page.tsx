@@ -1,41 +1,51 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { WingGallery } from "@/components/wing-gallery";
+import { ExhibitGridSkeleton } from "@/components/exhibit-grid-skeleton";
+import { WingExhibitResults } from "@/components/wing-exhibit-results";
+import { WingGalleryFilters } from "@/components/wing-gallery-filters";
 import { WINGS, wingSlugToDb } from "@/lib/constants";
-import { getPublishedExhibits } from "@/lib/queries/exhibits";
-
-export const dynamic = "force-dynamic";
 
 export default async function WingPage({
   params,
   searchParams,
 }: {
   params: Promise<{ wing: string }>;
-  searchParams: Promise<{ q?: string; open?: string }>;
+  searchParams: Promise<{ q?: string; open?: string; page?: string }>;
 }) {
   const { wing: wingSlug } = await params;
-  const { q, open } = await searchParams;
+  const { q, open, page: pageParam } = await searchParams;
   const wingDb = wingSlugToDb(wingSlug);
 
   if (!wingDb) notFound();
 
-  const wingMeta = WINGS.find((w) => w.slug === wingSlug)!;
-  const exhibits = await getPublishedExhibits({
-    wing: wingDb,
-    search: q,
-    openOnly: open === "1",
-  });
+  const wingMeta = WINGS.find((wing) => wing.slug === wingSlug)!;
+  const page = Math.max(1, Number(pageParam) || 1);
+  const openOnly = open === "1";
+  const suspenseKey = `${wingSlug}-${q ?? ""}-${openOnly}-${page}`;
 
   return (
-    <Suspense fallback={<div className="mx-auto max-w-6xl px-4 py-12">Loading…</div>}>
-      <WingGallery
+    <div className="mx-auto max-w-6xl px-4 py-12">
+      <div className="max-w-2xl">
+        <p className="text-sm text-muted-foreground">Wing</p>
+        <h1 className="font-heading mt-1 text-3xl">{wingMeta.label}</h1>
+        <p className="mt-2 text-muted-foreground">{wingMeta.description}</p>
+      </div>
+
+      <WingGalleryFilters
         wingSlug={wingSlug}
-        wingLabel={wingMeta.label}
-        wingDescription={wingMeta.description}
-        exhibits={exhibits}
         initialSearch={q ?? ""}
-        openOnly={open === "1"}
+        openOnly={openOnly}
       />
-    </Suspense>
+
+      <Suspense key={suspenseKey} fallback={<ExhibitGridSkeleton />}>
+        <WingExhibitResults
+          wingSlug={wingSlug}
+          wingDb={wingDb}
+          search={q}
+          openOnly={openOnly}
+          page={page}
+        />
+      </Suspense>
+    </div>
   );
 }

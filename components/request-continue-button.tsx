@@ -4,7 +4,13 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
-export function RequestContinueButton({ exhibitId }: { exhibitId: string }) {
+export function RequestContinueButton({
+  exhibitId,
+  hasSentMessage,
+}: {
+  exhibitId: string;
+  hasSentMessage: boolean;
+}) {
   const router = useRouter();
 
   async function handleClick() {
@@ -31,7 +37,7 @@ export function RequestContinueButton({ exhibitId }: { exhibitId: string }) {
 
   return (
     <Button size="lg" onClick={handleClick}>
-      Request to Continue
+      {hasSentMessage ? "Send message" : "Request to Continue"}
     </Button>
   );
 }

@@ -11,7 +11,6 @@ npm run db:push
 npm run dev
 ```
 
-See [docs/context.md](docs/context.md) for architecture, env vars, and scripts. Product brief and hackathon rules live in `docs/`.
 
-## Deploy
+
 

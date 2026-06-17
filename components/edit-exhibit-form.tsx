@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { WINGS, wingDbToSlug, wingSlugToDb } from "@/lib/constants";
 import { updateExhibitAction } from "@/lib/actions/exhibits";
 import type { WingDbValue } from "@/lib/constants";
+import { ExhibitImageUpload } from "@/components/exhibit-image-upload";
+import { ExhibitLinksInput } from "@/components/exhibit-links-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,6 +24,8 @@ type ExhibitData = {
   whyItStopped: string;
   whatItCouldHaveBeen: string;
   openToCollaboration: boolean;
+  imageUrls: string[];
+  links: string[];
 };
 
 export function EditExhibitForm({ exhibit }: { exhibit: ExhibitData }) {
@@ -38,6 +42,10 @@ export function EditExhibitForm({ exhibit }: { exhibit: ExhibitData }) {
   const [openToCollaboration, setOpenToCollaboration] = useState(
     exhibit.openToCollaboration
   );
+  const [imageUrls, setImageUrls] = useState(exhibit.imageUrls);
+  const [links, setLinks] = useState(
+    exhibit.links.length > 0 ? exhibit.links : [""]
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   async function handleSave() {
@@ -52,6 +60,8 @@ export function EditExhibitForm({ exhibit }: { exhibit: ExhibitData }) {
       whyItStopped,
       whatItCouldHaveBeen,
       openToCollaboration,
+      imageUrls,
+      links: links.filter((link) => link.trim()),
     });
 
     if (result.error) {
@@ -107,6 +117,8 @@ export function EditExhibitForm({ exhibit }: { exhibit: ExhibitData }) {
             className="mt-2"
           />
         </div>
+        <ExhibitImageUpload imageUrls={imageUrls} onChange={setImageUrls} />
+        <ExhibitLinksInput links={links} onChange={setLinks} />
         <div className="flex items-center justify-between">
           <Label htmlFor="open">Open to collaboration</Label>
           <Switch id="open" checked={openToCollaboration} onCheckedChange={setOpenToCollaboration} />

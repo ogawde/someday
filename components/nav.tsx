@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { WINGS } from "@/lib/constants";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { MessagesNavLink } from "@/components/messages-nav-link";
+import { ButtonLink } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,9 +51,7 @@ export function SiteNav() {
               <ButtonLink href="/submit" variant="outline" size="sm">
                 Submit
               </ButtonLink>
-              <ButtonLink href="/messages" variant="ghost" size="sm">
-                Messages
-              </ButtonLink>
+              <MessagesNavLink />
               <DropdownMenu>
                 <DropdownMenuTrigger
                   className="rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"

@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
 import { EditExhibitForm } from "@/components/edit-exhibit-form";
-import { db } from "@/lib/db";
-import { exhibits } from "@/lib/db/schema";
+import { getExhibitById } from "@/lib/queries/exhibits";
 import { getSession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -17,13 +15,9 @@ export default async function EditExhibitPage({
   const session = await getSession();
   if (!session) redirect("/sign-in");
 
-  const [exhibit] = await db
-    .select()
-    .from(exhibits)
-    .where(eq(exhibits.id, id))
-    .limit(1);
+  const exhibit = await getExhibitById(id, true);
 
-  if (!exhibit || exhibit.ownerId !== session.user.id) notFound();
+  if (!exhibit || exhibit.owner.id !== session.user.id) notFound();
   if (exhibit.status === "unpublished") notFound();
 
   return (
@@ -35,7 +29,23 @@ export default async function EditExhibitPage({
         ← Back to exhibit
       </Link>
       <div className="mt-6">
-        <EditExhibitForm exhibit={exhibit} />
+        <EditExhibitForm
+          exhibit={{
+            id: exhibit.id,
+            wing: exhibit.wing,
+            title: exhibit.title,
+            whatItWas: exhibit.whatItWas,
+            whyItStopped: exhibit.whyItStopped,
+            whatItCouldHaveBeen: exhibit.whatItCouldHaveBeen,
+            openToCollaboration: exhibit.openToCollaboration,
+            imageUrls: exhibit.media
+              .filter((item) => item.type === "image")
+              .map((item) => item.url),
+            links: exhibit.media
+              .filter((item) => item.type === "link")
+              .map((item) => item.url),
+          }}
+        />
       </div>
     </div>
   );
